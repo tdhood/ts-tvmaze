@@ -12767,11 +12767,12 @@ function getShowsByTerm(term) {
                     showInfo = _a.sent();
                     console.log("showInfo", showInfo);
                     shows = showInfo.data.map(function (show) {
+                        var _a;
                         return {
                             id: show.show.id,
                             name: show.show.name,
                             summary: show.show.summary,
-                            image: show.show.image.medium,
+                            image: (_a = show.show.image) === null || _a === void 0 ? void 0 : _a.medium,
                         };
                     });
                     console.log("shows=", shows);
@@ -12827,9 +12828,51 @@ $searchForm.on("submit", function (evt) {
 /** Given a show ID, get from API and return (promise) array of episodes:
  *      { id, name, season, number }
  */
-// async function getEpisodesOfShow(id) { }
+function getEpisodesOfShow(id) {
+    return __awaiter(this, void 0, void 0, function () {
+        var episodeInfo, episodes;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, axios_1.default.get("".concat(BASE_URL, "/shows/").concat(id, "/episodes"))];
+                case 1:
+                    episodeInfo = _a.sent();
+                    episodes = episodeInfo.data.map(function (episode) {
+                        return {
+                            id: episode.id,
+                            name: episode.name,
+                            season: episode.season,
+                            number: episode.number,
+                        };
+                    });
+                    return [2 /*return*/, episodes];
+            }
+        });
+    });
+}
 /** Write a clear docstring for this function... */
-// function populateEpisodes(episodes) { }
+function populateEpisodes(episodes) {
+    $episodesArea.empty();
+    for (var _i = 0, episodes_1 = episodes; _i < episodes_1.length; _i++) {
+        var episode = episodes_1[_i];
+        var $episode = $("<div data-show-id=\"".concat(episode.id, "\" class=\"Show col-md-12 col-lg-6 mb-4\">\n         <div class=\"media\">\n           <div class=\"media-body\">\n             <h5 class=\"text-primary\">").concat(episode.name, "</h5>\n             <div><small>Season: ").concat(episode.season, ", Number: ").concat(episode.number, "</small></div>\n             <button class=\"btn btn-outline-light btn-sm Show-getEpisodes\">\n               Episodes\n             </button>\n           </div>\n         </div>\n       </div>\n      "));
+        $episodesArea.append($episode);
+    }
+}
+function searchForEpisodes(evt) {
+    return __awaiter(this, void 0, void 0, function () {
+        var episodes;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, getEpisodesOfShow(evt.target.closest(".Show").data("show-id"))];
+                case 1:
+                    episodes = _a.sent();
+                    populateEpisodes(episodes);
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+$showsList.on("click", ".Show-getEpisodes", searchForEpisodes);
 
 
 /***/ })

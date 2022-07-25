@@ -13,6 +13,14 @@ interface ShowInterface {
   summary: string;
   image: string;
 }
+
+interface EpisodeInterface {
+  id: number;
+  name: string;
+  season: number;
+  number: number;
+}
+
 /** Given a search term, search for tv shows that match that query.
  *
  *  Returns (promise) array of show objects: [show, show, ...].
@@ -20,9 +28,7 @@ interface ShowInterface {
  *    (if no image URL given by API, put in a default image URL)
  */
 
-async function getShowsByTerm(
-  term: string | void
-): Promise<Array<ShowInterface>> {
+async function getShowsByTerm(term: string): Promise<Array<ShowInterface>> {
   // ADD: Remove placeholder & make request to TVMaze search shows API.
   let showInfo = await axios.get(`${BASE_URL}search/shows?q=${term}`);
   console.log("showInfo", showInfo);
@@ -31,7 +37,7 @@ async function getShowsByTerm(
       id: show.show.id,
       name: show.show.name,
       summary: show.show.summary,
-      image: show.show.image.medium,
+      image: show.show.image?.medium,
     } as ShowInterface;
   });
   console.log("shows=", shows);
@@ -88,8 +94,44 @@ $searchForm.on("submit", async function (evt) {
  *      { id, name, season, number }
  */
 
-// async function getEpisodesOfShow(id) { }
+async function getEpisodesOfShow(id: number): Promise<Array<EpisodeInterface>> {
+  let episodeInfo = await axios.get(`${BASE_URL}/shows/${id}/episodes`);
+  let episodes = episodeInfo.data.map((episode: any) => {
+    return {
+      id: episode.id,
+      name: episode.name,
+      season: episode.season,
+      number: episode.number,
+    } as EpisodeInterface;
+  });
+
+  return episodes;
+}
 
 /** Write a clear docstring for this function... */
 
-// function populateEpisodes(episodes) { }
+function populateEpisodes(episodes: Array<EpisodeInterface>) {
+  $episodesArea.empty();
+  for (let episode of episodes) {
+    const $episode= $(
+      `<div data-show-id="${episode.id}" class="Show col-md-12 col-lg-6 mb-4">
+         <div class="media">
+           <div class="media-body">
+             <h5 class="text-primary">${episode.name}</h5>
+             <div><small>Season: ${episode.season}, Number: ${episode.number}</small></div>
+             <button class="btn btn-outline-light btn-sm Show-getEpisodes">
+               Episodes
+             </button>
+           </div>
+         </div>
+       </div>
+      `
+    );
+    $episodesArea.append($episode);
+ }
+}
+async function searchForEpisodes(evt: JQuery.ClickEvent): Promise<void> {
+  const episodes = await getEpisodesOfShow(evt.target.closest(".Show").data("show-id")); 
+  populateEpisodes(episodes);
+} 
+$showsList.on("click", ".Show-getEpisodes", searchForEpisodes);
